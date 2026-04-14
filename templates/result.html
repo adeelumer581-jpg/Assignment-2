@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prediction Result</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/">🧠 Gender Classifier</a>
+  <div class="nav-links">
+    <a class="nav-link" href="/">Predict</a>
+    <a class="nav-link" href="/comparison">Model Comparison</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="container" style="max-width:520px;">
+
+    <div class="card">
+      <div class="result-hero">
+        <div class="result-emoji">{{ '👨' if prediction == 'Man' else '👩' }}</div>
+        <div class="result-label {{ 'man' if prediction == 'Man' else 'woman' }}">
+          {{ prediction }}
+        </div>
+        <div class="result-sub">
+          Predicted by <strong>{{ best_model }}</strong>
+          {% if report %}
+            ({{ report.models | selectattr("is_best") | list | first | attr("accuracy") }}% accuracy)
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <a href="/" class="btn btn-primary">🔄 Try Another Image</a>
+        <a href="/comparison" class="btn btn-outline">📊 View Model Stats</a>
+      </div>
+    </div>
+
+    {% if report %}
+    <div class="card">
+      <div class="card-title">📈 Model Accuracies</div>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Algorithm</th>
+            <th>Accuracy</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in report.models | sort(attribute='accuracy', reverse=True) %}
+          <tr {% if m.is_best %}class="best-row"{% endif %}>
+            <td>
+              <strong>{{ m.full_name }}</strong>
+              {% if m.is_best %}<span class="best-badge">✓ Best</span>{% endif %}
+            </td>
+            <td class="acc-text">{{ m.accuracy }}%</td>
+            <td style="width:120px;">
+              <div class="acc-bar-bg">
+                <div class="acc-bar-fill {{ 'best' if m.is_best else 'other' }}"
+                     style="width:{{ m.accuracy }}%"></div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+</body>
+</html>

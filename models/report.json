@@ -1,0 +1,63 @@
+{
+  "models": [
+    {
+      "name": "KNN",
+      "full_name": "K-Nearest Neighbors",
+      "accuracy": 64.07,
+      "cm": [
+        [
+          185,
+          233
+        ],
+        [
+          246,
+          669
+        ]
+      ],
+      "cm_image": "cm_knn.png",
+      "is_best": false,
+      "description": "Classifies by majority vote among the 5 nearest training samples."
+    },
+    {
+      "name": "DecisionTree",
+      "full_name": "Decision Tree",
+      "accuracy": 82.3,
+      "cm": [
+        [
+          183,
+          235
+        ],
+        [
+          1,
+          914
+        ]
+      ],
+      "cm_image": "cm_dt.png",
+      "is_best": true,
+      "description": "Splits data using feature thresholds to build an interpretable tree."
+    },
+    {
+      "name": "KMeans",
+      "full_name": "K-Means Clustering",
+      "accuracy": 68.64,
+      "cm": [
+        [
+          0,
+          418
+        ],
+        [
+          0,
+          915
+        ]
+      ],
+      "cm_image": "cm_kmeans.png",
+      "is_best": false,
+      "description": "Unsupervised clustering into 2 groups, mapped to gender labels by majority vote."
+    }
+  ],
+  "best": [
+    "DecisionTree"
+  ],
+  "train_samples": 2912,
+  "test_samples": 1333
+}

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Model Comparison</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/">🧠 Gender Classifier</a>
+  <div class="nav-links">
+    <a class="nav-link" href="/">Predict</a>
+    <a class="nav-link active" href="/comparison">Model Comparison</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="container">
+
+    <div class="hero">
+      <h1>📊 Model Comparison</h1>
+      <p>Side-by-side evaluation of KNN, Decision Tree, and K-Means on {{ report.test_samples }} test images.</p>
+    </div>
+
+    {% if report %}
+
+    <!-- Accuracy stats -->
+    <div class="stats-row">
+      {% for m in report.models | sort(attribute='accuracy', reverse=True) %}
+      <div class="stat-card {% if m.is_best %}best-card{% endif %}">
+        <div class="stat-label">{{ loop.index }}{% if loop.index == 1 %}st{% elif loop.index == 2 %}nd{% else %}rd{% endif %} Place</div>
+        <div class="stat-value">{{ m.accuracy }}%</div>
+        <div class="stat-name">{{ m.full_name }}</div>
+        {% if m.is_best %}<span class="best-badge">🏆 Best Model</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Comparison table -->
+    <div class="card">
+      <div class="card-title">📋 Accuracy Breakdown</div>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Algorithm</th>
+            <th>Type</th>
+            <th>Accuracy</th>
+            <th style="width:200px;">Bar</th>
+            <th>Verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set max_acc = report.models | map(attribute='accuracy') | max %}
+          {% for m in report.models | sort(attribute='accuracy', reverse=True) %}
+          <tr {% if m.is_best %}class="best-row"{% endif %}>
+            <td><strong>{{ m.full_name }}</strong></td>
+            <td style="color:var(--gray-400); font-size:0.85rem;">
+              {{ "Supervised" if m.name != "KMeans" else "Unsupervised" }}
+            </td>
+            <td><strong>{{ m.accuracy }}%</strong></td>
+            <td>
+              <div class="acc-bar-bg">
+                <div class="acc-bar-fill {{ 'best' if m.is_best else 'other' }}"
+                     style="width:{{ (m.accuracy / max_acc * 100) | round }}%"></div>
+              </div>
+            </td>
+            <td>
+              {% if m.is_best %}
+                <span class="best-badge">✓ Winner</span>
+              {% else %}
+                <span style="color:var(--gray-400); font-size:0.85rem;">
+                  −{{ (max_acc - m.accuracy) | round(2) }}%
+                </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div style="margin-top:1.2rem; padding:1rem; background:var(--primary-light); border-radius:10px;">
+        <strong>🏆 Best Algorithm: {{ report.best | join(', ') }}</strong><br>
+        <span style="font-size:0.9rem; color:var(--gray-600);">
+          {% set best = report.models | selectattr("is_best") | list | first %}
+          {{ best.description }}
+          It achieved <strong>{{ best.accuracy }}%</strong> accuracy — the highest among all three models.
+        </span>
+      </div>
+    </div>
+
+    <!-- Accuracy bar chart -->
+    <div class="card">
+      <div class="card-title">📈 Accuracy Chart</div>
+      <img src="/static/comparison_chart.png" alt="Accuracy Comparison Chart" class="chart-img"/>
+    </div>
+
+    <!-- Confusion matrices -->
+    <div class="card">
+      <div class="card-title">🔢 Confusion Matrices</div>
+      <p style="color:var(--gray-600); font-size:0.9rem; margin-bottom:1rem;">
+        Each matrix shows how many images were correctly and incorrectly classified.
+        Rows = Actual label, Columns = Predicted label.
+      </p>
+      <div class="cm-grid">
+        {% for m in report.models %}
+        <div class="cm-card">
+          <div class="cm-card-header {% if m.is_best %}best-header{% endif %}">
+            <span>{{ m.full_name }}</span>
+            {% if m.is_best %}<span class="best-badge">Best</span>{% endif %}
+          </div>
+          <img src="/static/{{ m.cm_image }}" alt="{{ m.name }} Confusion Matrix"/>
+          <div style="padding:0.6rem 0.8rem; font-size:0.82rem; color:var(--gray-600); background:var(--gray-50);">
+            Accuracy: <strong>{{ m.accuracy }}%</strong>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Algorithm descriptions -->
+    <div class="card">
+      <div class="card-title">📚 Algorithm Details</div>
+      <div style="display:grid; gap:1rem;">
+        {% for m in report.models %}
+        <div style="padding:1rem; border-radius:10px; background:var(--gray-50); border-left:4px solid {{ '#4f46e5' if m.is_best else '#93c5fd' }};">
+          <div style="font-weight:700; margin-bottom:0.3rem;">
+            {{ m.full_name }}
+            {% if m.is_best %}<span class="best-badge" style="margin-left:0.5rem;">🏆 Best</span>{% endif %}
+          </div>
+          <div style="font-size:0.9rem; color:var(--gray-600);">{{ m.description }}</div>
+          <div style="margin-top:0.5rem; font-size:0.85rem;">
+            <strong>Accuracy:</strong> {{ m.accuracy }}% &nbsp;|&nbsp;
+            <strong>Type:</strong> {{ "Supervised" if m.name != "KMeans" else "Unsupervised" }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Dataset info -->
+    <div class="card">
+      <div class="card-title">🗂️ Dataset Info</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; text-align:center;">
+        <div style="padding:1rem; background:var(--gray-50); border-radius:10px;">
+          <div style="font-size:1.8rem; font-weight:800;">{{ report.train_samples }}</div>
+          <div style="color:var(--gray-600); font-size:0.9rem;">Training Images</div>
+        </div>
+        <div style="padding:1rem; background:var(--gray-50); border-radius:10px;">
+          <div style="font-size:1.8rem; font-weight:800;">{{ report.test_samples }}</div>
+          <div style="color:var(--gray-600); font-size:0.9rem;">Test Images</div>
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="card">
+      <p style="color:var(--gray-600);">No report data found. Please run <code>python3 train.py</code> first.</p>
+    </div>
+    {% endif %}
+
+    <div style="text-align:center; margin-top:1rem;">
+      <a href="/" class="btn btn-primary" style="width:auto; padding:0.75rem 2rem;">🔍 Go Predict</a>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gender Classifier — ML Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/">🧠 Gender Classifier</a>
+  <div class="nav-links">
+    <a class="nav-link active" href="/">Predict</a>
+    <a class="nav-link" href="/comparison">Model Comparison</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="container">
+
+    <div class="hero">
+      <h1>Gender Classification</h1>
+      <p>Upload a face image — the best-trained model will predict the gender instantly.</p>
+    </div>
+
+    {% if report %}
+    <!-- Quick stats -->
+    <div class="stats-row">
+      {% for m in report.models %}
+      <div class="stat-card {% if m.is_best %}best-card{% endif %}">
+        <div class="stat-label">{{ m.name }}</div>
+        <div class="stat-value">{{ m.accuracy }}%</div>
+        <div class="stat-name">{{ m.full_name }}</div>
+        {% if m.is_best %}<span class="best-badge">✓ Best Model</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Upload card -->
+    <div class="card">
+      <div class="card-title">📤 Upload Image</div>
+
+      {% if error %}
+      <div class="error-box">⚠️ {{ error }}</div>
+      {% endif %}
+
+      <form action="/predict" method="POST" enctype="multipart/form-data">
+        <div class="upload-zone" id="drop-zone">
+          <input type="file" name="file" id="file-input"
+                 accept=".jpg,.jpeg,.png,.gif,image/*" required/>
+          <div class="upload-icon">🖼️</div>
+          <p>Click or drag &amp; drop an image here</p>
+          <small>Supported: JPG, JPEG, PNG, GIF</small>
+          <div id="file-name"></div>
+        </div>
+        <button type="submit" class="btn btn-primary">🔍 Predict Gender</button>
+      </form>
+    </div>
+
+    {% if report %}
+    <!-- Best model info -->
+    <div class="card">
+      <div class="card-title">🏆 Active Model</div>
+      {% set best = report.models | selectattr("is_best") | list | first %}
+      <p style="color:var(--gray-600); font-size:0.95rem;">
+        Predictions are made using <strong>{{ best.full_name }}</strong>
+        with <strong>{{ best.accuracy }}%</strong> accuracy on the test set
+        ({{ report.test_samples }} images).
+        {{ best.description }}
+      </p>
+      <div style="margin-top:1rem;">
+        <a href="/comparison" class="btn btn-outline">📊 View Full Comparison</a>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+  const input = document.getElementById('file-input');
+  const label = document.getElementById('file-name');
+  input.addEventListener('change', () => {
+    label.textContent = input.files[0] ? '📎 ' + input.files[0].name : '';
+  });
+</script>
+</body>
+</html>

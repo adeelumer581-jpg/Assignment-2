@@ -1,0 +1,9 @@
+flask
+scikit-learn
+pillow
+numpy
+scikit-image
+joblib
+hypothesis
+pytest
+matplotlib
