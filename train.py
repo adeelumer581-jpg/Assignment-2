@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(_HERE, "src"))
 from data_loader import load_dataset
 from preprocessor import preprocess
 from feature_extractor import build_feature_matrix
-from models import KNNModel, DecisionTreeModel, KMeansModel
+from models import KNNModel, DecisionTreeModel, NaiveBayesModel
 from evaluator import compute_accuracy, compute_confusion_matrix, print_results, compare_models
 from persistence import save_artifacts
 
@@ -102,9 +102,9 @@ def main():
     dt_model = DecisionTreeModel()
     dt_model.fit(X_train, y_train)
 
-    print("      Training K-Means (k=2)...")
-    kmeans_model = KMeansModel(k=2)
-    kmeans_model.fit(X_train, y_train)
+    print("      Training Naive Bayes...")
+    nb_model = NaiveBayesModel()
+    nb_model.fit(X_train, y_train)
     print("      All models trained.")
 
     print("\n[6/7] Evaluating models on test set...")
@@ -118,12 +118,12 @@ def main():
     dt_cm        = compute_confusion_matrix(y_test, dt_preds)
     print_results("Decision Tree", dt_acc, dt_cm)
 
-    kmeans_preds = kmeans_model.predict(X_test)
-    kmeans_acc   = compute_accuracy(y_test, kmeans_preds)
-    kmeans_cm    = compute_confusion_matrix(y_test, kmeans_preds)
-    print_results("K-Means", kmeans_acc, kmeans_cm)
+    nb_preds  = nb_model.predict(X_test)
+    nb_acc    = compute_accuracy(y_test, nb_preds)
+    nb_cm     = compute_confusion_matrix(y_test, nb_preds)
+    print_results("Naive Bayes", nb_acc, nb_cm)
 
-    results    = {"KNN": knn_acc, "DecisionTree": dt_acc, "KMeans": kmeans_acc}
+    results    = {"KNN": knn_acc, "DecisionTree": dt_acc, "NaiveBayes": nb_acc}
     comparison = compare_models(results)
     best_names = comparison["best"]
 
@@ -135,7 +135,7 @@ def main():
     print("-" * 27)
     print(f"Best model(s): {', '.join(best_names)}")
 
-    model_map      = {"KNN": knn_model, "DecisionTree": dt_model, "KMeans": kmeans_model}
+    model_map      = {"KNN": knn_model, "DecisionTree": dt_model, "NaiveBayes": nb_model}
     best_model_obj = model_map[best_names[0]]
 
     # Save artifacts
@@ -148,9 +148,9 @@ def main():
 
     # Confusion matrix images
     cm_data = {
-        "KNN":          (knn_cm,    "cm_knn.png"),
-        "DecisionTree": (dt_cm,     "cm_dt.png"),
-        "KMeans":       (kmeans_cm, "cm_kmeans.png"),
+        "KNN":          (knn_cm, "cm_knn.png"),
+        "DecisionTree": (dt_cm,  "cm_dt.png"),
+        "NaiveBayes":   (nb_cm,  "cm_nb.png"),
     }
     for name, (cm, fname) in cm_data.items():
         save_confusion_matrix_image(cm, name, os.path.join(static_dir, fname))
@@ -180,13 +180,13 @@ def main():
                 "description": "Splits data using feature thresholds to build an interpretable tree."
             },
             {
-                "name": "KMeans",
-                "full_name": "K-Means Clustering",
-                "accuracy": kmeans_acc,
-                "cm": kmeans_cm.tolist(),
-                "cm_image": "cm_kmeans.png",
-                "is_best": "KMeans" in best_names,
-                "description": "Unsupervised clustering into 2 groups, mapped to gender labels by majority vote."
+                "name": "NaiveBayes",
+                "full_name": "Naive Bayes",
+                "accuracy": nb_acc,
+                "cm": nb_cm.tolist(),
+                "cm_image": "cm_nb.png",
+                "is_best": "NaiveBayes" in best_names,
+                "description": "Applies Bayes' theorem with Gaussian likelihood, assuming feature independence."
             },
         ],
         "best": best_names,
@@ -197,7 +197,7 @@ def main():
         json.dump(report, f, indent=2)
 
     save_artifacts(
-        {"knn": knn_model, "dt": dt_model, "kmeans": kmeans_model, "best": best_model_obj},
+        {"knn": knn_model, "dt": dt_model, "nb": nb_model, "best": best_model_obj},
         "flat",
         models_dir,
     )

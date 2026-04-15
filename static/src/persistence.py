@@ -5,7 +5,7 @@ import joblib
 _MODEL_FILES = {
     "knn": "knn_model.joblib",
     "dt": "dt_model.joblib",
-    "kmeans": "kmeans_model.joblib",
+    "nb": "nb_model.joblib",
     "best": "best_model.joblib",
 }
 _CONFIG_FILE = "extractor_config.json"

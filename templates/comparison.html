@@ -57,7 +57,7 @@
           <tr {% if m.is_best %}class="best-row"{% endif %}>
             <td><strong>{{ m.full_name }}</strong></td>
             <td style="color:var(--gray-400); font-size:0.85rem;">
-              {{ "Supervised" if m.name != "KMeans" else "Unsupervised" }}
+              {{ "Supervised" if m.name != "NaiveBayes" else "Supervised" }}
             </td>
             <td><strong>{{ m.accuracy }}%</strong></td>
             <td>
@@ -132,7 +132,7 @@
           <div style="font-size:0.9rem; color:var(--gray-600);">{{ m.description }}</div>
           <div style="margin-top:0.5rem; font-size:0.85rem;">
             <strong>Accuracy:</strong> {{ m.accuracy }}% &nbsp;|&nbsp;
-            <strong>Type:</strong> {{ "Supervised" if m.name != "KMeans" else "Unsupervised" }}
+            <strong>Type:</strong> Supervised
           </div>
         </div>
         {% endfor %}
