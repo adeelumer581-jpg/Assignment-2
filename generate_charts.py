@@ -38,37 +38,44 @@ def save_cm(cm_list, model_name, output_path):
     plt.tight_layout()
     plt.savefig(output_path, dpi=120, bbox_inches="tight")
     plt.close()
-    print(f"  Saved {output_path}")
+    print(f"  ✅ Saved {output_path}")
 
 
 def save_chart(report, output_path):
-    models     = [m["name"] for m in report["models"]]
+    models     = [m["full_name"] for m in report["models"]]  # Use full names for display
     accs       = [m["accuracy"] for m in report["models"]]
     best_names = report["best"]
-    colors     = ["#4f46e5" if m in best_names else "#93c5fd" for m in models]
+    colors     = ["#4f46e5" if m in best_names else "#93c5fd" for m in [m["name"] for m in report["models"]]]
 
-    fig, ax = plt.subplots(figsize=(6, 4))
-    bars = ax.bar(models, accs, color=colors, edgecolor="white", linewidth=1.5, width=0.5)
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = ax.bar(models, accs, color=colors, edgecolor="white", linewidth=2, width=0.6)
+    
     for bar, acc in zip(bars, accs):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.5,
-                f"{acc:.2f}%", ha="center", va="bottom", fontsize=11, fontweight="bold")
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,
+                f"{acc:.2f}%", ha="center", va="bottom", fontsize=12, fontweight="bold")
+    
     ax.set_ylim(0, 105)
-    ax.set_ylabel("Accuracy (%)", fontsize=11)
-    ax.set_title("Model Accuracy Comparison", fontsize=13, fontweight="bold", pad=12)
+    ax.set_ylabel("Accuracy (%)", fontsize=12, fontweight="bold")
+    ax.set_title("Model Accuracy Comparison", fontsize=14, fontweight="bold", pad=15)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.tick_params(axis="x", labelsize=11)
+    ax.grid(axis="y", alpha=0.3, linestyle="--")
+    
     best_patch = mpatches.Patch(color="#4f46e5", label=f"Best: {', '.join(best_names)}")
-    ax.legend(handles=[best_patch], fontsize=10)
+    ax.legend(handles=[best_patch], fontsize=11, loc="upper right")
+    
     plt.tight_layout()
     plt.savefig(output_path, dpi=120, bbox_inches="tight")
     plt.close()
-    print(f"  Saved {output_path}")
+    print(f"  ✅ Saved {output_path}")
 
 
-print("Generating charts...")
+print("🔄 Generating charts from report.json...")
+print("\n📊 Confusion Matrices:")
 for m in report["models"]:
     save_cm(m["cm"], m["full_name"], os.path.join(static_dir, m["cm_image"]))
 
+print("\n📈 Comparison Chart:")
 save_chart(report, os.path.join(static_dir, "comparison_chart.png"))
-print("Done.")
+print("\n✅ Done! Charts regenerated successfully.")
