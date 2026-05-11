@@ -48,22 +48,23 @@ def save_comparison_chart(results, best_names, output_path):
     accs   = list(results.values())
     colors = ["#4f46e5" if m in best_names else "#93c5fd" for m in models]
 
-    fig, ax = plt.subplots(figsize=(6, 4))
-    bars = ax.bar(models, accs, color=colors, edgecolor="white", linewidth=1.5, width=0.5)
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = ax.bar(models, accs, color=colors, edgecolor="white", linewidth=2, width=0.6)
 
     for bar, acc in zip(bars, accs):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.5,
-                f"{acc:.2f}%", ha="center", va="bottom", fontsize=11, fontweight="bold")
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,
+                f"{acc:.2f}%", ha="center", va="bottom", fontsize=12, fontweight="bold")
 
     ax.set_ylim(0, 105)
-    ax.set_ylabel("Accuracy (%)", fontsize=11)
-    ax.set_title("Model Accuracy Comparison", fontsize=13, fontweight="bold", pad=12)
+    ax.set_ylabel("Accuracy (%)", fontsize=12, fontweight="bold")
+    ax.set_title("Model Accuracy Comparison", fontsize=14, fontweight="bold", pad=15)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    ax.tick_params(axis="x", labelsize=11)
+    ax.tick_params(axis="x", labelsize=12)
+    ax.grid(axis="y", alpha=0.3, linestyle="--")
 
     best_patch = mpatches.Patch(color="#4f46e5", label=f"Best: {', '.join(best_names)}")
-    ax.legend(handles=[best_patch], fontsize=10)
+    ax.legend(handles=[best_patch], fontsize=11, loc="upper right")
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=120, bbox_inches="tight")
@@ -123,19 +124,19 @@ def main():
     nb_cm     = compute_confusion_matrix(y_test, nb_preds)
     print_results("Naive Bayes", nb_acc, nb_cm)
 
-    results    = {"KNN": knn_acc, "DecisionTree": dt_acc, "NaiveBayes": nb_acc}
+    results    = {"KNN": knn_acc, "Decision Tree": dt_acc, "Naive Bayes": nb_acc}
     comparison = compare_models(results)
     best_names = comparison["best"]
 
     print("\n--- Model Comparison ---")
-    print(f"{'Model':<15} {'Accuracy':>10}")
-    print("-" * 27)
+    print(f"{'Model':<18} {'Accuracy':>10}")
+    print("-" * 30)
     for row in comparison["table"]:
-        print(f"{row['model']:<15} {row['accuracy']:>9.2f}%")
-    print("-" * 27)
+        print(f"{row['model']:<18} {row['accuracy']:>9.2f}%")
+    print("-" * 30)
     print(f"Best model(s): {', '.join(best_names)}")
 
-    model_map      = {"KNN": knn_model, "DecisionTree": dt_model, "NaiveBayes": nb_model}
+    model_map      = {"KNN": knn_model, "Decision Tree": dt_model, "Naive Bayes": nb_model}
     best_model_obj = model_map[best_names[0]]
 
     # Save artifacts
@@ -149,8 +150,8 @@ def main():
     # Confusion matrix images
     cm_data = {
         "KNN":          (knn_cm, "cm_knn.png"),
-        "DecisionTree": (dt_cm,  "cm_dt.png"),
-        "NaiveBayes":   (nb_cm,  "cm_nb.png"),
+        "Decision Tree": (dt_cm,  "cm_dt.png"),
+        "Naive Bayes":   (nb_cm,  "cm_nb.png"),
     }
     for name, (cm, fname) in cm_data.items():
         save_confusion_matrix_image(cm, name, os.path.join(static_dir, fname))
@@ -168,24 +169,24 @@ def main():
                 "cm": knn_cm.tolist(),
                 "cm_image": "cm_knn.png",
                 "is_best": "KNN" in best_names,
-                "description": "Classifies by majority vote among the 5 nearest training samples."
+                "description": "Classifies by majority vote among the 5 nearest training samples (Euclidean distance)."
             },
             {
-                "name": "DecisionTree",
+                "name": "Decision Tree",
                 "full_name": "Decision Tree",
                 "accuracy": dt_acc,
                 "cm": dt_cm.tolist(),
                 "cm_image": "cm_dt.png",
-                "is_best": "DecisionTree" in best_names,
-                "description": "Splits data using feature thresholds to build an interpretable tree."
+                "is_best": "Decision Tree" in best_names,
+                "description": "Recursively splits features using information gain to build an interpretable tree."
             },
             {
-                "name": "NaiveBayes",
+                "name": "Naive Bayes",
                 "full_name": "Naive Bayes",
                 "accuracy": nb_acc,
                 "cm": nb_cm.tolist(),
                 "cm_image": "cm_nb.png",
-                "is_best": "NaiveBayes" in best_names,
+                "is_best": "Naive Bayes" in best_names,
                 "description": "Applies Bayes' theorem with Gaussian likelihood, assuming feature independence."
             },
         ],
